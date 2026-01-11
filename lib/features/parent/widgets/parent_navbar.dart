@@ -29,17 +29,14 @@ class ParentNavBar extends StatelessWidget {
         fontSize: 12,
       ),
       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_rounded),
-          label: 'Home',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
         BottomNavigationBarItem(
           icon: Icon(Icons.check_circle_outline_rounded),
           label: 'Attendance',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.notifications_rounded),
-          label: 'Notice',
+          label: 'Notices',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.more_horiz_rounded),

@@ -41,6 +41,15 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
   late AnimationController _animationController;
   late List<ParentAttendanceRecord> _records;
 
+  ImageProvider _userAvatarProvider() {
+    final avatar = widget.userAvatar.trim();
+    if (avatar.isEmpty) return const AssetImage('assets/avatar.png');
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+      return NetworkImage(avatar);
+    }
+    return AssetImage(avatar);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -117,26 +126,52 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
   }
 
   int get _totalDays => _records.length;
-    int get _present => _records
-      .where((r) => r.status == ParentAttendanceStatus.present)
-      .length;
-    int get _absent => _records
-      .where((r) => r.status == ParentAttendanceStatus.absent)
-      .length;
-    int get _leave =>
+  int get _present =>
+      _records.where((r) => r.status == ParentAttendanceStatus.present).length;
+  int get _absent =>
+      _records.where((r) => r.status == ParentAttendanceStatus.absent).length;
+  int get _leave =>
       _records.where((r) => r.status == ParentAttendanceStatus.leave).length;
-    double get _attendancePercentage =>
+  double get _attendancePercentage =>
       _totalDays > 0 ? (_present / _totalDays) * 100 : 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        elevation: 8,
+        toolbarHeight: 72,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFB71C1C), Color(0xFFD32F2F)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFB71C1C).withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+        ),
+        title: const Text(
+          'Attendance',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(
           left: 20,
           right: 20,
-          top: 60,
+          top: 20,
           bottom: 100,
         ),
         child: Column(
@@ -177,45 +212,82 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
                 curve: const Interval(0, 0.3, curve: Curves.easeOut),
               ),
             ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF3B82F6), Color(0xFF1E40AF)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Attendance',
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Track your child\'s attendance and performance',
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.3,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.grey[200]!, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-            ),
-          ],
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFB71C1C), Color(0xFFD32F2F)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.fact_check_rounded,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hi ${widget.userName}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Here's your child's attendance summary.",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFFB71C1C).withValues(alpha: 0.25),
+                    width: 2,
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundImage: _userAvatarProvider(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -305,8 +377,7 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
                       ),
                       Text(
                         todayRecord?.subject ?? 'No class scheduled',
-                        style:
-                            TextStyle(fontSize: 13, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -356,7 +427,7 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
                   _buildStatItem(
                     'Total Days',
                     _totalDays.toString(),
-                    const Color(0xFF3B82F6),
+                    const Color(0xFFB71C1C),
                   ),
                   const SizedBox(width: 16),
                   _buildStatItem(
@@ -387,14 +458,14 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF3B82F6), Color(0xFF1E40AF)],
+                    colors: [Color(0xFFB71C1C), Color(0xFFD32F2F)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
+                      color: const Color(0xFFB71C1C).withValues(alpha: 0.2),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -508,7 +579,7 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(color: Colors.grey[200]!),
             boxShadow: [
               BoxShadow(
@@ -521,13 +592,31 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'January 2026',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.grey[900],
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFB71C1C).withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.calendar_month_rounded,
+                      color: Color(0xFFB71C1C),
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'January 2026',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.grey[900],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               _buildCalendarGrid(),
@@ -560,13 +649,35 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
   }
 
   Widget _buildCalendarDay(int day, ParentAttendanceStatus? status) {
-    final (color, _) = _getStatusColors(status ?? ParentAttendanceStatus.absent);
+    if (status == null) {
+      return Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+          ),
+        ),
+        child: Center(
+          child: Text(
+            day.toString(),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final (color, _) = _getStatusColors(status);
     final isToday = day == 5;
 
     return Container(
       decoration: BoxDecoration(
         color: isToday ? color : color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isToday ? color : color.withValues(alpha: 0.3),
         ),

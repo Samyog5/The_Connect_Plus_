@@ -60,86 +60,62 @@ class _ParentMorePageState extends State<ParentMorePage>
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: Row(
-          children: [
-            if (!isMobile) _buildSidebar(context, items),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 28,
-                  bottom: 100,
+      appBar: AppBar(
+        elevation: 8,
+        toolbarHeight: 72,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFB71C1C), Color(0xFFD32F2F)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFB71C1C).withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+        ),
+        title: const Text(
+          'More',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      body: Row(
+        children: [
+          if (!isMobile) _buildSidebar(context, items),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 100,
+              ),
+              child: FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: _animationController,
+                  curve: Curves.easeOut,
                 ),
-                child: FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: _animationController,
-                    curve: Curves.easeOut,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildPageHeader(isMobile: isMobile),
-                      const SizedBox(height: 18),
-                      ...items,
-                    ],
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [...items],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       bottomNavigationBar: ParentNavBar(
         selectedIndex: _selectedNavIndex,
         onTabChanged: _handleBottomNavigation,
-      ),
-    );
-  }
-
-  Widget _buildPageHeader({required bool isMobile}) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
-      ),
-      child: Row(
-        children: [
-          if (isMobile)
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFFB71C1C).withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(Icons.menu_rounded, color: Color(0xFFB71C1C)),
-            ),
-          if (isMobile) const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Parent Menu',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Shortcuts to parent-relevant features',
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ),
-          CircleAvatar(
-            radius: 18,
-            backgroundImage: NetworkImage(widget.userAvatar),
-          ),
-        ],
       ),
     );
   }
@@ -265,12 +241,7 @@ class _ParentMorePageState extends State<ParentMorePage>
     }
 
     void openPage(Widget page) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => page,
-        ),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => page));
     }
 
     // Parent-relevant features based on the provided menu screenshot.
@@ -287,7 +258,7 @@ class _ParentMorePageState extends State<ParentMorePage>
       ),
       tile(
         icon: Icons.notifications_rounded,
-        label: 'Notice',
+        label: 'Notices',
         onTap: () => _handleBottomNavigation(2),
       ),
       tile(

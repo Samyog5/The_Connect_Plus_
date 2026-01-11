@@ -58,10 +58,8 @@ class _ParentHomePageState extends State<ParentHomePage>
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 768;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         elevation: 8,
         toolbarHeight: 72,
@@ -81,82 +79,20 @@ class _ParentHomePageState extends State<ParentHomePage>
             ],
           ),
         ),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'EduConnect - Parent',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            if (!isMobile) ...[
-              Text(
-                _getCurrentDate(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications, color: Colors.white),
-                    onPressed: () {},
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              ScaleTransition(
-                scale: Tween<double>(begin: 0.8, end: 1.0).animate(
-                  CurvedAnimation(
-                    parent: _animationController,
-                    curve: Curves.easeOutBack,
-                  ),
-                ),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: CircleAvatar(backgroundImage: _userAvatarProvider()),
-                ),
-              ),
-            ],
-          ],
+        title: const Text(
+          'Home',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
+          left: 20,
+          right: 20,
+          top: 20,
           bottom: 100,
         ),
         child: Column(
@@ -179,37 +115,9 @@ class _ParentHomePageState extends State<ParentHomePage>
     );
   }
 
-  String _getCurrentDate() {
-    final now = DateTime.now();
-    const days = [
-      'Sunday',
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-    ];
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return '${days[now.weekday % 7]}, ${months[now.month - 1]} ${now.day}, ${now.year}';
-  }
-
   ImageProvider _userAvatarProvider() {
     final avatar = widget.userAvatar.trim();
-    if (avatar.isEmpty) return const AssetImage('assets/avatar.png');
+    if (avatar.isEmpty) return const AssetImage('assets/avatar.jpg');
     if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
       return NetworkImage(avatar);
     }
@@ -284,24 +192,54 @@ class _ParentHomePageState extends State<ParentHomePage>
               ),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Good Morning, ${widget.userName}!',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Good Morning, ${widget.userName}!',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Here's what's happening with your child today.",
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                "Here's what's happening with your child today.",
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+              const SizedBox(width: 14),
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFFB71C1C).withValues(alpha: 0.30),
+                    width: 2.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 30,
+                  backgroundImage: _userAvatarProvider(),
+                  backgroundColor: const Color(0xFFF8FAFC),
                 ),
               ),
             ],
@@ -496,8 +434,11 @@ class _ParentHomePageState extends State<ParentHomePage>
               TextButton.icon(
                 onPressed: () =>
                     context.go('/parent/attendance', extra: _navExtra()),
-                icon: const Icon(Icons.arrow_forward_ios, size: 14,),
-                label: const Text('View Details', style: TextStyle(fontSize: 10),),
+                icon: const Icon(Icons.arrow_forward_ios, size: 14),
+                label: const Text(
+                  'View Details',
+                  style: TextStyle(fontSize: 10),
+                ),
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFFB71C1C),
                 ),
@@ -608,7 +549,7 @@ class _ParentHomePageState extends State<ParentHomePage>
                 onPressed: () =>
                     context.go('/parent/notices', extra: _navExtra()),
                 icon: const Icon(Icons.arrow_forward_ios, size: 14),
-                label: const Text('View All', style: TextStyle(fontSize: 10),),
+                label: const Text('View All', style: TextStyle(fontSize: 10)),
                 style: TextButton.styleFrom(foregroundColor: Colors.blue),
               ),
             ],

@@ -14,6 +14,15 @@ class ParentPlaceholderPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ImageProvider _userAvatarProvider() {
+      final avatar = userAvatar.trim();
+      if (avatar.isEmpty) return const AssetImage('assets/avatar.png');
+      if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+        return NetworkImage(avatar);
+      }
+      return AssetImage(avatar);
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -66,10 +75,7 @@ class ParentPlaceholderPage extends StatelessWidget {
                 style: TextStyle(color: Colors.grey[700]),
               ),
               const SizedBox(height: 16),
-              CircleAvatar(
-                radius: 28,
-                backgroundImage: NetworkImage(userAvatar),
-              ),
+              CircleAvatar(radius: 28, backgroundImage: _userAvatarProvider()),
             ],
           ),
         ),
