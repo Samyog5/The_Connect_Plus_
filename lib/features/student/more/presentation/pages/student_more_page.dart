@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tcp/features/student/diary/presentation/pages/student_diary_page.dart';
 import 'package:tcp/features/student/more/presentation/pages/develop.dart';
+import 'package:tcp/features/student/news/presentation/pages/news_page.dart';
+import 'package:tcp/features/student/library/presentation/pages/library_page.dart';
 import 'package:tcp/features/student/widgets/custom_navbar.dart';
 
 class StudentMorePage extends StatefulWidget {
@@ -123,7 +125,9 @@ class _StudentMorePageState extends State<StudentMorePage>
           ),
           CircleAvatar(
             radius: 18,
-            backgroundImage: NetworkImage(widget.userAvatar),
+            backgroundImage: widget.userAvatar.startsWith('http')
+                ? NetworkImage(widget.userAvatar)
+                : AssetImage(widget.userAvatar) as ImageProvider,
           ),
         ],
       ),
@@ -316,16 +320,7 @@ class _StudentMorePageState extends State<StudentMorePage>
           ),
         ),
       ),
-      tile(
-        icon: Icons.local_library_rounded,
-        label: 'Library',
-        onTap: () => openPage(
-          ParentExamManagementPage(
-            userName: widget.userName,
-            userAvatar: widget.userAvatar,
-          ),
-        ),
-      ),
+
       tile(
         icon: Icons.menu_book_rounded,
         label: 'Learning Materials',
@@ -369,12 +364,12 @@ class _StudentMorePageState extends State<StudentMorePage>
       tile(
         icon: Icons.newspaper_rounded,
         label: 'Educational News',
-        onTap: () => openPage(
-          ParentExamManagementPage(
-            userName: widget.userName,
-            userAvatar: widget.userAvatar,
-          ),
-        ),
+        onTap: () => openPage(NewsPage()),
+      ),
+      tile(
+        icon: Icons.local_library_rounded,
+        label: 'Library',
+        onTap: () => openPage(const LibraryPage()),
       ),
       tile(
         icon: Icons.video_call_rounded,
@@ -389,12 +384,9 @@ class _StudentMorePageState extends State<StudentMorePage>
       tile(
         icon: Icons.school_rounded,
         label: 'e-Learning',
-        onTap: () => openPage(
-          ParentExamManagementPage(
-            userName: widget.userName,
-            userAvatar: widget.userAvatar,
-          ),
-        ),
+        onTap: () => context.push(
+          '/elearning',
+        ), // ✅ Fixed: Use GoRouter to ensure BlocProvider is injected
       ),
       tile(
         icon: Icons.more_horiz_rounded,
