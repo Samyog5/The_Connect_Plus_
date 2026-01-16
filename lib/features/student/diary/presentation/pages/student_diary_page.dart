@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tcp/features/student/widgets/custom_navbar.dart';
 import 'package:go_router/go_router.dart';
-import '../../homework/presentation/pages/student_homework_page.dart';
+import '../bloc/diary_bloc.dart';
+import '../bloc/diary_state.dart';
+import '../widgets/diary_item_card.dart';
+import '../widgets/diary_loading_shimmer.dart';
+import '../widgets/diary_empty_state.dart';
 
 class StudentDiaryPage extends StatefulWidget {
   final String userName;
@@ -91,89 +96,93 @@ class _StudentDiaryPageState extends State<StudentDiaryPage>
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
-          bottom: 100,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildAnimatedSection(0, _buildSectionTitle('Daily Updates')),
-            const SizedBox(height: 20),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 0.85,
-              children: [
-                _buildAnimatedSection(
-                  1,
-                  _buildDiaryCard(
-                    title: 'Homework',
-                    icon: Icons.menu_book_rounded,
-                    color: Colors.blue,
-                    count: '3 Tasks',
-                    description: 'Daily homework tasks',
-                    onTap: () => context.push('/homework'),
+      body: BlocBuilder<DiaryBloc, DiaryState>(
+        builder: (context, state) {
+          if (state is DiaryLoading) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: 100,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionTitle('Daily Updates'),
+                  const SizedBox(height: 20),
+                  const DiaryLoadingShimmer(),
+                ],
+              ),
+            );
+          }
+
+          if (state is DiaryError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error: ${state.message}',
+                    style: const TextStyle(fontSize: 16, color: Colors.red),
                   ),
-                ),
-                _buildAnimatedSection(
-                  2,
-                  _buildDiaryCard(
-                    title: 'Assignments',
-                    icon: Icons.assignment_rounded,
-                    color: Colors.orange,
-                    count: '2 Pending',
-                    description: 'Project submissions',
-                    onTap: () => context.push(
-                      '/assignments',
-                    ), // you can route to assignments page later
+                ],
+              ),
+            );
+          }
+
+          if (state is DiaryLoaded) {
+            final items = state.filteredItems;
+
+            if (items.isEmpty) {
+              return const DiaryEmptyState(
+                message: 'No diary items available at the moment',
+              );
+            }
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: 100,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildAnimatedSection(0, _buildSectionTitle('Daily Updates')),
+                  const SizedBox(height: 20),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.85,
+                        ),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return _buildAnimatedSection(
+                        index + 1,
+                        DiaryItemCard(
+                          item: item,
+                          onTap: () => context.push(item.route),
+                        ),
+                      );
+                    },
                   ),
-                ),
-                _buildAnimatedSection(
-                  3,
-                  _buildDiaryCard(
-                    title: 'Routine',
-                    icon: Icons.schedule_rounded,
-                    color: Colors.green,
-                    count: 'Today',
-                    description: 'Class schedule',
-                    onTap: () => context.go('/schedule'),
-                  ),
-                ),
-                _buildAnimatedSection(
-                  4,
-                  _buildDiaryCard(
-                    title: 'Diary Sign',
-                    icon: Icons.draw_rounded,
-                    color: Colors.purple,
-                    count: 'Required',
-                    description: 'Parent signature',
-                    onTap: () {}, // you can route to diary sign page later
-                  ),
-                ),
-                _buildAnimatedSection(
-                  5,
-                  _buildDiaryCard(
-                    title: 'Institute Calendar',
-                    icon: Icons.calendar_month_rounded,
-                    color: Colors.red,
-                    count: 'Events',
-                    description: 'View upcoming institute events',
-                    onTap: () => context.push(
-                      '/calendar',
-                    ), // define /calendar in GoRouter
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+                ],
+              ),
+            );
+          }
+
+          return const SizedBox.shrink();
+        },
       ),
       bottomNavigationBar: CustomNavBar(
         selectedIndex: _selectedNavIndex,
@@ -231,79 +240,6 @@ class _StudentDiaryPageState extends State<StudentDiaryPage>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildDiaryCard({
-    required String title,
-    required IconData icon,
-    required Color color,
-    required String count,
-    required String description,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.1),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  count,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey[600],
-                    height: 1.2,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
