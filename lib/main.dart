@@ -8,8 +8,11 @@ import 'package:tcp/routes/app_router.dart';
 import 'core/localization/app_localizations_delegate.dart';
 import 'core/localization/locale_provider.dart';
 import 'features/auth/auth_injection.dart';
+import 'package:tcp/injection_container.dart' as di;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await di.init();
   setupAuthInjection();
   runApp(const MyApp());
 }
