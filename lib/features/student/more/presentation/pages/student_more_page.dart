@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tcp/features/student/more/presentation/pages/develop.dart';
+<<<<<<< Updated upstream
+=======
+import 'package:tcp/features/student/news/presentation/pages/news_page.dart';
+import 'package:tcp/features/student/library/presentation/pages/library_page.dart';
+import 'package:tcp/features/parent/more/presentation/pages/parent_vehicle_management_page.dart';
+>>>>>>> Stashed changes
 import 'package:tcp/features/student/widgets/custom_navbar.dart';
 
 class StudentMorePage extends StatefulWidget {
@@ -322,7 +328,7 @@ class _StudentMorePageState extends State<StudentMorePage>
         icon: Icons.directions_bus_rounded,
         label: 'Vehicle Management',
         onTap: () => openPage(
-          ParentExamManagementPage(
+          ParentVehicleManagementPage(
             userName: widget.userName,
             userAvatar: widget.userAvatar,
           ),
