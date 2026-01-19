@@ -1,0 +1,18 @@
+enum ParentMoreMenuDestination {
+  headOfInstitute,
+  noticesTab,
+  attendanceTab,
+  diary,
+  eventsActivities,
+  feeManagement,
+  examManagement,
+  library,
+  learningMaterials,
+  vehicleManagement,
+  instituteInformation,
+  invitationsGreetings,
+  educationalNews,
+  zoomClass,
+  eLearning,
+  others,
+}

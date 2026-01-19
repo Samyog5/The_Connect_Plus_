@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:tcp/core/utils/avatar_image_provider.dart';
+import 'package:tcp/injection_container.dart' as di;
 import 'package:tcp/features/parent/home/domain/entities/parent_fee_info.dart';
 import 'package:tcp/features/parent/home/domain/entities/parent_home_notice.dart';
+import 'package:tcp/features/parent/home/presentation/bloc/parent_home_bloc.dart';
+import 'package:tcp/features/parent/home/presentation/bloc/parent_home_event.dart';
+import 'package:tcp/features/parent/home/presentation/bloc/parent_home_state.dart';
 import 'package:tcp/features/parent/widgets/parent_gradient_app_bar.dart';
 import 'package:tcp/features/parent/widgets/parent_navbar.dart';
 
@@ -26,24 +31,11 @@ class _ParentHomePageState extends State<ParentHomePage>
   late final AnimationController _animationController;
   int _selectedNavIndex = 0;
 
-  final ParentFeeInfo _feeInfo = const ParentFeeInfo(
-    totalDue: '12,500',
-    dueDate: '15 Jan 2026',
-    status: 'Pending',
-  );
-
-  final List<ParentHomeNotice> _homeNotices = const [
-    ParentHomeNotice(
-      title: 'Parent-Teacher Meeting',
-      description: 'Meeting scheduled this week. Please confirm attendance.',
-      time: '2h ago',
-    ),
-    ParentHomeNotice(
-      title: 'Holiday Notice',
-      description: 'School will remain closed next Monday.',
-      time: '1d ago',
-    ),
-  ];
+  late final ParentHomeBloc _homeBloc;
+  ParentFeeInfo? _feeInfo;
+  List<ParentHomeNotice> _homeNotices = const [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -52,42 +44,101 @@ class _ParentHomePageState extends State<ParentHomePage>
       duration: const Duration(milliseconds: 900),
       vsync: this,
     )..forward();
+
+    _homeBloc = di.sl<ParentHomeBloc>()..add(const LoadParentHome());
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _homeBloc.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: const ParentGradientAppBar(title: 'Home'),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: 100,
+    return BlocProvider.value(
+      value: _homeBloc,
+      child: BlocListener<ParentHomeBloc, ParentHomeState>(
+        listener: (context, state) {
+          if (!mounted) return;
+
+          if (state is ParentHomeLoading) {
+            setState(() {
+              _isLoading = true;
+              _errorMessage = null;
+            });
+          } else if (state is ParentHomeLoaded) {
+            setState(() {
+              _isLoading = false;
+              _errorMessage = null;
+              _feeInfo = state.dashboard.feeInfo;
+              _homeNotices = state.dashboard.notices;
+            });
+          } else if (state is ParentHomeError) {
+            setState(() {
+              _isLoading = false;
+              _errorMessage = state.message;
+            });
+          }
+        },
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          appBar: const ParentGradientAppBar(title: 'Home'),
+          body: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
+                )
+              : _errorMessage != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<ParentHomeBloc>().add(
+                              const LoadParentHome(),
+                            );
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    top: 20,
+                    bottom: 100,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildAnimatedWidget(0, _buildWelcomeCard()),
+                      const SizedBox(height: 24),
+                      _buildAnimatedWidget(1, _buildFeeWidget()),
+                      const SizedBox(height: 24),
+                      _buildAnimatedWidget(2, _buildAttendanceWidget()),
+                      const SizedBox(height: 24),
+                      _buildAnimatedWidget(3, _buildNoticesWidget()),
+                    ],
+                  ),
+                ),
+          bottomNavigationBar: ParentNavBar(
+            selectedIndex: _selectedNavIndex,
+            onTabChanged: _handleNavigation,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildAnimatedWidget(0, _buildWelcomeCard()),
-            const SizedBox(height: 24),
-            _buildAnimatedWidget(1, _buildFeeWidget()),
-            const SizedBox(height: 24),
-            _buildAnimatedWidget(2, _buildAttendanceWidget()),
-            const SizedBox(height: 24),
-            _buildAnimatedWidget(3, _buildNoticesWidget()),
-          ],
-        ),
-      ),
-      bottomNavigationBar: ParentNavBar(
-        selectedIndex: _selectedNavIndex,
-        onTabChanged: _handleNavigation,
       ),
     );
   }
@@ -229,6 +280,11 @@ class _ParentHomePageState extends State<ParentHomePage>
   }
 
   Widget _buildFeeWidget() {
+    final feeInfo = _feeInfo;
+    if (feeInfo == null) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -283,7 +339,7 @@ class _ParentHomePageState extends State<ParentHomePage>
                   ),
                 ),
                 child: Text(
-                  _feeInfo.status,
+                  feeInfo.status,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -316,7 +372,7 @@ class _ParentHomePageState extends State<ParentHomePage>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      _feeInfo.totalDue,
+                      feeInfo.totalDue,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -325,7 +381,7 @@ class _ParentHomePageState extends State<ParentHomePage>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Due: ${_feeInfo.dueDate}',
+                      'Due: ${feeInfo.dueDate}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[700],

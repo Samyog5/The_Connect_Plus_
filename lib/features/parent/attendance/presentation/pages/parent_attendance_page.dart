@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:tcp/core/utils/avatar_image_provider.dart';
 import 'package:tcp/features/parent/attendance/domain/entities/parent_attendance_record.dart';
+import 'package:tcp/injection_container.dart' as di;
+import 'package:tcp/features/parent/attendance/presentation/bloc/parent_attendance_bloc.dart';
+import 'package:tcp/features/parent/attendance/presentation/bloc/parent_attendance_event.dart';
+import 'package:tcp/features/parent/attendance/presentation/bloc/parent_attendance_state.dart';
 import 'package:tcp/features/parent/widgets/parent_gradient_app_bar.dart';
 import 'package:tcp/features/parent/widgets/parent_navbar.dart';
 
@@ -25,6 +29,9 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
   int _selectedNavIndex = 1;
   late AnimationController _animationController;
   late List<ParentAttendanceRecord> _records;
+  late final ParentAttendanceBloc _attendanceBloc;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -34,70 +41,17 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
       vsync: this,
     );
 
-    _initializeAttendanceData();
-    _animationController.forward();
-  }
+    _records = const [];
+    _attendanceBloc = di.sl<ParentAttendanceBloc>()
+      ..add(const LoadParentAttendance());
 
-  void _initializeAttendanceData() {
-    _records = const [
-      ParentAttendanceRecord(
-        date: '5 Jan',
-        day: 'Friday',
-        status: ParentAttendanceStatus.present,
-        subject: 'Mathematics',
-        time: '9:00 AM - 10:00 AM',
-      ),
-      ParentAttendanceRecord(
-        date: '4 Jan',
-        day: 'Thursday',
-        status: ParentAttendanceStatus.present,
-        subject: 'English',
-        time: '9:00 AM - 10:00 AM',
-      ),
-      ParentAttendanceRecord(
-        date: '3 Jan',
-        day: 'Wednesday',
-        status: ParentAttendanceStatus.absent,
-        subject: 'Science',
-        time: '10:00 AM - 11:00 AM',
-      ),
-      ParentAttendanceRecord(
-        date: '2 Jan',
-        day: 'Tuesday',
-        status: ParentAttendanceStatus.present,
-        subject: 'Social Studies',
-        time: '11:00 AM - 12:00 PM',
-      ),
-      ParentAttendanceRecord(
-        date: '1 Jan',
-        day: 'Monday',
-        status: ParentAttendanceStatus.holiday,
-      ),
-      ParentAttendanceRecord(
-        date: '31 Dec',
-        day: 'Sunday',
-        status: ParentAttendanceStatus.present,
-        subject: 'Computer Science',
-        time: '2:00 PM - 3:00 PM',
-      ),
-      ParentAttendanceRecord(
-        date: '30 Dec',
-        day: 'Saturday',
-        status: ParentAttendanceStatus.leave,
-      ),
-      ParentAttendanceRecord(
-        date: '29 Dec',
-        day: 'Friday',
-        status: ParentAttendanceStatus.present,
-        subject: 'Hindi',
-        time: '10:00 AM - 11:00 AM',
-      ),
-    ];
+    _animationController.forward();
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _attendanceBloc.close();
     super.dispose();
   }
 
@@ -113,32 +67,87 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: const ParentGradientAppBar(title: 'Attendance'),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: 100,
+    return BlocProvider.value(
+      value: _attendanceBloc,
+      child: BlocListener<ParentAttendanceBloc, ParentAttendanceState>(
+        listener: (context, state) {
+          if (!mounted) return;
+
+          if (state is ParentAttendanceLoading) {
+            setState(() {
+              _isLoading = true;
+              _errorMessage = null;
+            });
+          } else if (state is ParentAttendanceLoaded) {
+            setState(() {
+              _isLoading = false;
+              _errorMessage = null;
+              _records = state.records;
+            });
+          } else if (state is ParentAttendanceError) {
+            setState(() {
+              _isLoading = false;
+              _errorMessage = state.message;
+            });
+          }
+        },
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          appBar: const ParentGradientAppBar(title: 'Attendance'),
+          body: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
+                )
+              : _errorMessage != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<ParentAttendanceBloc>().add(
+                              const LoadParentAttendance(),
+                            );
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    top: 20,
+                    bottom: 100,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildTodayStatusCard(),
+                      const SizedBox(height: 28),
+                      _buildStatsCard(),
+                      const SizedBox(height: 28),
+                      _buildAttendanceCalendar(),
+                      const SizedBox(height: 28),
+                      _buildAttendanceList(),
+                    ],
+                  ),
+                ),
+          bottomNavigationBar: ParentNavBar(
+            selectedIndex: _selectedNavIndex,
+            onTabChanged: _handleNavigation,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTodayStatusCard(),
-            const SizedBox(height: 28),
-            _buildStatsCard(),
-            const SizedBox(height: 28),
-            _buildAttendanceCalendar(),
-            const SizedBox(height: 28),
-            _buildAttendanceList(),
-          ],
-        ),
-      ),
-      bottomNavigationBar: ParentNavBar(
-        selectedIndex: _selectedNavIndex,
-        onTabChanged: _handleNavigation,
       ),
     );
   }
