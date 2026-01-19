@@ -30,8 +30,6 @@ class _ParentHomePageState extends State<ParentHomePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
   int _selectedNavIndex = 0;
-
-  late final ParentHomeBloc _homeBloc;
   ParentFeeInfo? _feeInfo;
   List<ParentHomeNotice> _homeNotices = const [];
   bool _isLoading = true;
@@ -44,21 +42,18 @@ class _ParentHomePageState extends State<ParentHomePage>
       duration: const Duration(milliseconds: 900),
       vsync: this,
     )..forward();
-
-    _homeBloc = di.sl<ParentHomeBloc>()..add(const LoadParentHome());
   }
 
   @override
   void dispose() {
     _animationController.dispose();
-    _homeBloc.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _homeBloc,
+    return BlocProvider(
+      create: (_) => di.sl<ParentHomeBloc>()..add(const LoadParentHome()),
       child: BlocListener<ParentHomeBloc, ParentHomeState>(
         listener: (context, state) {
           if (!mounted) return;
