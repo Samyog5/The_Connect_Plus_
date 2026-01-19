@@ -1,23 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:tcp/features/parent/notices/domain/entities/parent_notice.dart';
+import 'package:tcp/features/parent/widgets/parent_gradient_app_bar.dart';
 import 'package:tcp/features/parent/widgets/parent_navbar.dart';
-
-class ParentNotice {
-  final String id;
-  final String title;
-  final String description;
-  final String date;
-  final bool isUnread;
-
-  const ParentNotice({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.date,
-    this.isUnread = false,
-  });
-}
 
 class ParentNoticesPage extends StatefulWidget {
   final String userName;
@@ -80,34 +66,7 @@ class _ParentNoticesPageState extends State<ParentNoticesPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        elevation: 8,
-        toolbarHeight: 72,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFB71C1C), Color(0xFFD32F2F)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFB71C1C).withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-        ),
-        title: const Text(
-          'Notices',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
+      appBar: const ParentGradientAppBar(title: 'Notices'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: FadeTransition(

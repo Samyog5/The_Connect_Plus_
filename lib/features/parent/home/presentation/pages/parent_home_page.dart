@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:tcp/core/utils/avatar_image_provider.dart';
+import 'package:tcp/features/parent/home/domain/entities/parent_fee_info.dart';
+import 'package:tcp/features/parent/home/domain/entities/parent_home_notice.dart';
+import 'package:tcp/features/parent/widgets/parent_gradient_app_bar.dart';
 import 'package:tcp/features/parent/widgets/parent_navbar.dart';
 
 class ParentHomePage extends StatefulWidget {
@@ -22,23 +26,23 @@ class _ParentHomePageState extends State<ParentHomePage>
   late final AnimationController _animationController;
   int _selectedNavIndex = 0;
 
-  final Map<String, String> _feeInfo = const {
-    'totalDue': '12,500',
-    'dueDate': '15 Jan 2026',
-    'status': 'Pending',
-  };
+  final ParentFeeInfo _feeInfo = const ParentFeeInfo(
+    totalDue: '12,500',
+    dueDate: '15 Jan 2026',
+    status: 'Pending',
+  );
 
-  final List<Map<String, String>> _homeNotices = const [
-    {
-      'title': 'Parent-Teacher Meeting',
-      'description': 'Meeting scheduled this week. Please confirm attendance.',
-      'time': '2h ago',
-    },
-    {
-      'title': 'Holiday Notice',
-      'description': 'School will remain closed next Monday.',
-      'time': '1d ago',
-    },
+  final List<ParentHomeNotice> _homeNotices = const [
+    ParentHomeNotice(
+      title: 'Parent-Teacher Meeting',
+      description: 'Meeting scheduled this week. Please confirm attendance.',
+      time: '2h ago',
+    ),
+    ParentHomeNotice(
+      title: 'Holiday Notice',
+      description: 'School will remain closed next Monday.',
+      time: '1d ago',
+    ),
   ];
 
   @override
@@ -60,34 +64,7 @@ class _ParentHomePageState extends State<ParentHomePage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        elevation: 8,
-        toolbarHeight: 72,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFB71C1C), Color(0xFFD32F2F)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFB71C1C).withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-        ),
-        title: const Text(
-          'Home',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
+      appBar: const ParentGradientAppBar(title: 'Home'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(
           left: 20,
@@ -115,14 +92,7 @@ class _ParentHomePageState extends State<ParentHomePage>
     );
   }
 
-  ImageProvider _userAvatarProvider() {
-    final avatar = widget.userAvatar.trim();
-    if (avatar.isEmpty) return const AssetImage('assets/avatar.jpg');
-    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
-      return NetworkImage(avatar);
-    }
-    return AssetImage(avatar);
-  }
+  ImageProvider _userAvatarProvider() => avatarImageProvider(widget.userAvatar);
 
   Map<String, String> _navExtra() => {
     'userName': widget.userName,
@@ -313,7 +283,7 @@ class _ParentHomePageState extends State<ParentHomePage>
                   ),
                 ),
                 child: Text(
-                  _feeInfo['status'] ?? 'Pending',
+                  _feeInfo.status,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -346,7 +316,7 @@ class _ParentHomePageState extends State<ParentHomePage>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      _feeInfo['totalDue'] ?? '-',
+                      _feeInfo.totalDue,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -355,7 +325,7 @@ class _ParentHomePageState extends State<ParentHomePage>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Due: ${_feeInfo['dueDate'] ?? '-'}',
+                      'Due: ${_feeInfo.dueDate}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[700],
@@ -585,7 +555,7 @@ class _ParentHomePageState extends State<ParentHomePage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          notice['title'] ?? '',
+                          notice.title,
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -594,7 +564,7 @@ class _ParentHomePageState extends State<ParentHomePage>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          notice['description'] ?? '',
+                          notice.description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -604,7 +574,7 @@ class _ParentHomePageState extends State<ParentHomePage>
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Posted ${notice['time'] ?? ''}',
+                          'Posted ${notice.time}',
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.grey[500],

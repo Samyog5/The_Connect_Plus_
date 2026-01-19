@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:tcp/features/parent/widgets/parent_placeholder_page.dart';
+import 'package:tcp/features/student/library/presentation/pages/library_page.dart';
 
 class ParentLibraryPage extends StatelessWidget {
   final String userName;
@@ -14,10 +14,6 @@ class ParentLibraryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ParentPlaceholderPage(
-      title: 'Library',
-      userName: userName,
-      userAvatar: userAvatar,
-    );
+    return const LibraryPage();
   }
 }

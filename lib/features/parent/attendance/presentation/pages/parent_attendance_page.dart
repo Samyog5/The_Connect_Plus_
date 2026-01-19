@@ -1,25 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:tcp/core/utils/avatar_image_provider.dart';
+import 'package:tcp/features/parent/attendance/domain/entities/parent_attendance_record.dart';
+import 'package:tcp/features/parent/widgets/parent_gradient_app_bar.dart';
 import 'package:tcp/features/parent/widgets/parent_navbar.dart';
-
-enum ParentAttendanceStatus { present, absent, leave, holiday }
-
-class ParentAttendanceRecord {
-  final String date; // Format: "5 Jan"
-  final String day;
-  final ParentAttendanceStatus status;
-  final String? subject;
-  final String? time;
-
-  const ParentAttendanceRecord({
-    required this.date,
-    required this.day,
-    required this.status,
-    this.subject,
-    this.time,
-  });
-}
 
 class ParentAttendancePage extends StatefulWidget {
   final String userName;
@@ -40,15 +25,6 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
   int _selectedNavIndex = 1;
   late AnimationController _animationController;
   late List<ParentAttendanceRecord> _records;
-
-  ImageProvider _userAvatarProvider() {
-    final avatar = widget.userAvatar.trim();
-    if (avatar.isEmpty) return const AssetImage('assets/avatar.png');
-    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
-      return NetworkImage(avatar);
-    }
-    return AssetImage(avatar);
-  }
 
   @override
   void initState() {
@@ -139,34 +115,7 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        elevation: 8,
-        toolbarHeight: 72,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFB71C1C), Color(0xFFD32F2F)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFB71C1C).withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-        ),
-        title: const Text(
-          'Attendance',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
+      appBar: const ParentGradientAppBar(title: 'Attendance'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(
           left: 20,
@@ -177,8 +126,6 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildPageHeader(),
-            const SizedBox(height: 28),
             _buildTodayStatusCard(),
             const SizedBox(height: 28),
             _buildStatsCard(),
@@ -192,103 +139,6 @@ class _ParentAttendancePageState extends State<ParentAttendancePage>
       bottomNavigationBar: ParentNavBar(
         selectedIndex: _selectedNavIndex,
         onTabChanged: _handleNavigation,
-      ),
-    );
-  }
-
-  Widget _buildPageHeader() {
-    return FadeTransition(
-      opacity: Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: const Interval(0, 0.3, curve: Curves.easeOut),
-        ),
-      ),
-      child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, -0.1), end: Offset.zero)
-            .animate(
-              CurvedAnimation(
-                parent: _animationController,
-                curve: const Interval(0, 0.3, curve: Curves.easeOut),
-              ),
-            ),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFB71C1C), Color(0xFFD32F2F)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.fact_check_rounded,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hi ${widget.userName}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Here's your child's attendance summary.",
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFFB71C1C).withValues(alpha: 0.25),
-                    width: 2,
-                  ),
-                ),
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundImage: _userAvatarProvider(),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
